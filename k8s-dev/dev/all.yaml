@@ -1,0 +1,125 @@
+# Source: mahk8s/templates/configmap.yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mahara01-config
+  namespace: siad-mahara-dev-01
+data:
+  dataroot: /var/www/maharadata
+  wwwroot: https://uqam.ngrok.io
+  memsession: mah-memcached-0.mah-memcached.siad-mahara-dev-01:11211,mah-memcached-1.mah-memcached.siad-mahara-dev-01:11211
+  mcrouter: mah-mcrouter.siad-mahara-dev-01:5000
+  passwsalt: 'SalutLaPassem01lap0kp0xp0k19'
+---
+# Source: mahk8s/templates/service.yml
+kind: Service
+apiVersion: v1
+metadata:
+  name: web-service-mahara01
+  namespace: siad-mahara-dev-01
+spec:
+  selector:
+    app: mah01-dev
+  ports:
+    - port: 443
+      protocol: TCP
+      targetPort: 443
+      nodePort: 30005
+      name: http
+  type: NodePort  
+---
+# Source: mahk8s/templates/deployment.yml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: mah01
+  namespace: siad-mahara-dev-01
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mah01-dev
+    spec:
+      
+      containers:
+      - image: nmolleruq/mah:v0.6.3
+        imagePullPolicy: IfNotPresent
+        name: mahara-web01
+        resources:
+            limits:
+              cpu: 2100m
+              memory: 3Gi
+            requests:
+              cpu: 10m
+              memory: 50Mi
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          timeoutSeconds: 1
+          periodSeconds: 60
+        env:
+        - name: MAH_DATAROOT
+          valueFrom:
+            configMapKeyRef:
+              name: mahara01-config
+              key: dataroot
+        - name: MAH_MCROUTER
+          valueFrom:
+            configMapKeyRef:
+              name: mahara01-config
+              key: mcrouter
+        - name: MAH_MEMSESSION
+          valueFrom:
+            configMapKeyRef:
+              name: mahara01-config
+              key: memsession
+        - name: MAH_WWWROOT
+          valueFrom:
+            configMapKeyRef:
+              name: mahara01-config
+              key: wwwroot
+        - name: MAH_PWDSALT
+          valueFrom:
+            configMapKeyRef:
+              name: mahara01-config
+              key: passwsalt
+        - name: MAH_DBHOST
+          valueFrom:
+            secretKeyRef:
+              name: secrets-mahara01-dev
+              key: db_host
+        - name: MAH_DBNAME
+          valueFrom:
+            secretKeyRef:
+              name: secrets-mahara01-dev
+              key: db_name
+        - name: MAH_DBUSER
+          valueFrom:
+            secretKeyRef:
+              name: secrets-mahara01-dev
+              key: db_username
+        - name: MAH_DBPASS
+          valueFrom:
+            secretKeyRef:
+              name: secrets-mahara01-dev
+              key: db_password
+        - name: NEW_RELIC_APP_NAME
+          valueFrom:
+            secretKeyRef:
+              name: newrelic
+              key: newrelicapp
+        - name: NR_INSTALL_KEY
+          valueFrom:
+            secretKeyRef:
+              name: newrelic
+              key: newrelickey
+        volumeMounts:
+        - mountPath: /var/www/maharadata
+          name: mahara01-storage
+      volumes:
+      - name: mahara01-storage
+        persistentVolumeClaim:
+         claimName: pvc-siad-mahara-dev-01-vol01

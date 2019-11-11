@@ -1,0 +1,78 @@
+#!/bin/bash
+
+# corriger ça si l'on apprend pourquoi le cluster ne repart pas au redémarrage
+# sinon tester et relancer les affaires
+# cette commande n'a pas d'effet une fois sorti du script.
+export KUBECONFIG="$(kind get kubeconfig-path --name="k8s-test")"
+
+# Pour repartir le cluster:
+# Valider si c'est en train de rouler
+control_up=$(docker ps |grep k8s-test-control-plane)
+
+if [[ "${control_up}" =~ (k8s) ]]; then
+    echo "Cluster is up"
+else
+    #Partir cluster
+    docker start k8s-test-control-plane && \
+    docker exec k8s-test-control-plane \
+    sh -c 'mount -o remount,ro /sys; kill -USR1 1'
+    #Attendre que ce soit up
+    sleep 5s
+fi
+
+# Tant qu'à faire on pourrait aussi ajouter la création du ns ici
+# Ce sera au besoin:
+kubectl delete ns siad-mahara-dev-01
+kubectl create ns siad-mahara-dev-01
+
+
+# faire les préalables
+for i in k8s-dev/kind/*.yaml
+do 
+  resource="${i}"
+  kubectl create -f $resource
+done
+
+mysqlpod="$(kubectl -n siad-mahara-dev-01 get pods -l app=mysql -o custom-columns=:metadata.name | grep mysql)"
+
+# C'est sûrement trop.... à révoir
+sleep 10s
+
+# copier le fichier pour la BD
+echo 'Copier DB file'
+kubectl -n siad-mahara-dev-01 cp \
+DB/mahara_dev.sql \
+siad-mahara-dev-01/${mysqlpod}:/mahara_dev.sql
+
+# copier le ficher pour le setup BD dans le pod
+echo 'Copier DB setup file'
+kubectl -n siad-mahara-dev-01 cp \
+mysql-setup \
+siad-mahara-dev-01/${mysqlpod}:/mysql-setup
+
+# installer 
+# à révoir ça ne marche pas comme ça.
+echo 'Setup db'
+kubectl -n siad-mahara-dev-01 exec -it \
+${mysqlpod} -- sh -c '/mysql-setup'
+
+
+# créer les resource pour l'app
+for i in k8s-dev/dev/*.yaml
+do 
+  resource="${i}"
+  kubectl create -f $resource
+done
+
+sleep 30s
+mahpod="$(kubectl -n siad-mahara-dev-01 get pods -l app=mah01-dev -o custom-columns=:metadata.name | grep mah)"
+
+# exécuter le changement de permissions
+kubectl -n siad-mahara-dev-01 \
+exec -it ${mahpod} -- sh -c  "chown -R www-data:www-data /var/www/maharadata"
+
+# pour partir le tunnel
+# forwarder le trafic ver le 30005 avant
+# port-forward est bloquant
+# kubectl -n siad-mahara-dev-01 port-forward service/web-service-mahara01 30005:443 & \
+# ngrok http -subdomain=uqam 30005

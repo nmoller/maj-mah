@@ -1,0 +1,85 @@
+---
+# Source: mahk8s/templates/memcached.yml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: memcached-ses01
+  namespace: siad-mahara-dev-01
+spec:
+  replicas: 1
+  template:
+    metadata:
+        labels:
+          app: mem-ses01
+    spec:
+      containers:
+      - name: mem-ses
+        image: memcached:1.5.8
+        command: ["memcached"]
+        args: ["-m", "145", "-c", "800", "-I", "10m"]
+        resources:
+          limits:
+            cpu: 500m
+            memory: 150Mi
+          requests:
+            cpu: 5m
+            memory: 10Mi
+        ports:
+        - containerPort: 11211
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: memcached-ses02
+  namespace: siad-mahara-dev-01
+spec:
+  replicas: 1
+  template:
+    metadata:
+        labels:
+          app: mem-ses02
+    spec:
+      containers:
+      - name: mem-ses02
+        image: memcached:1.5.8
+        command: ["memcached"]
+        args: ["-m", "145", "-c", "800", "-I", "10m"]
+        resources:
+          limits:
+            cpu: 500m
+            memory: 150Mi
+          requests:
+            cpu: 5m
+            memory: 10Mi
+        ports:
+        - containerPort: 11211
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: memcached-ses01
+  namespace: siad-mahara-dev-01
+spec:
+  selector:
+    app: mem-ses01
+  ports:
+    - protocol: TCP
+      port: 11211
+      targetPort: 11211
+  type: ClusterIP 
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: memcached-ses02
+  namespace: siad-mahara-dev-01
+spec:
+  selector:
+    app: mem-ses02
+  ports:
+    - protocol: TCP
+      port: 11211
+      targetPort: 11211
+  type: ClusterIP

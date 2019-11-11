@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Ce n'est pas génial cependant pour dev ça va faire
+myuser='root'
+mypass='root'
+
+# créer la bonne BD dans le pod mysql
+mysql -u${myuser} -p${mypass} -e "create database mahara_dev;"
+
+mysql -u${myuser} -p${mypass} mahara_dev < /mahara_dev.sql

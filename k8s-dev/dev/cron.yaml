@@ -1,0 +1,87 @@
+---
+# Source: mahk8s/templates/cron.yml
+apiVersion: batch/v2alpha1
+kind: CronJob
+metadata:
+  name: mahara-cron01
+  namespace: siad-mahara-dev-01
+spec:
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      #backoffLimit: 0
+      template:
+        spec:
+          volumes:
+          - name: mahara01-storage
+            persistentVolumeClaim:
+             claimName: pvc-siad-mahara-dev-01-vol01
+          containers:
+          - image: nmolleruq/mah:v0.6.3
+            imagePullPolicy: IfNotPresent
+            name: mah-cron
+            resources:
+              limits:
+                cpu: 50m
+                memory: 50Mi
+              requests:
+                cpu: 10m
+                memory: 10Mi
+            env:
+            - name: MAH_DATAROOT
+              valueFrom:
+                configMapKeyRef:
+                  name: mahara01-config
+                  key: dataroot
+            - name: MAH_MCROUTER
+              valueFrom:
+                configMapKeyRef:
+                  name: mahara01-config
+                  key: mcrouter
+            - name: MAH_MEMSESSION
+              valueFrom:
+                configMapKeyRef:
+                  name: mahara01-config
+                  key: memsession
+            - name: MAH_WWWROOT
+              valueFrom:
+                configMapKeyRef:
+                  name: mahara01-config
+                  key: wwwroot
+            - name: MAH_PWDSALT
+              valueFrom:
+                configMapKeyRef:
+                  name: mahara01-config
+                  key: passwsalt
+            - name: MAH_DBHOST
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-mahara01-dev
+                  key: db_host
+            - name: MAH_DBNAME
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-mahara01-dev
+                  key: db_name
+            - name: MAH_DBUSER
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-mahara01-dev
+                  key: db_username
+            - name: MAH_DBPASS
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-mahara01-dev
+                  key: db_password
+            
+            volumeMounts:
+            - mountPath: /var/www/maharadata
+              name: mahara01-storage
+          
+            args:
+            - /bin/sh
+            - -c
+            - su -p -s /bin/bash -l www-data -c "php /var/www/html/lib/cron.php"
+          restartPolicy: Never
