@@ -8,3 +8,6 @@ mypass='root'
 mysql -u${myuser} -p${mypass} -e "create database mahara_dev;"
 
 mysql -u${myuser} -p${mypass} mahara_dev < /mahara_dev.sql
+
+# Corriger encoding
+mysql -u${myuser} -p${mypass} -e "ALTER DATABASE mahara_dev CHARACTER SET = utf8 COLLATE = utf8_general_ci;"

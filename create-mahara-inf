@@ -1,9 +1,12 @@
 #!/bin/bash
 
+# SI problèmes avec cluster, delete & restart
+# kind delete cluster --name k8s-test
+# kind create cluster --name k8s-test
+
 # corriger ça si l'on apprend pourquoi le cluster ne repart pas au redémarrage
 # sinon tester et relancer les affaires
 # cette commande n'a pas d'effet une fois sorti du script.
-export KUBECONFIG="$(kind get kubeconfig-path --name="k8s-test")"
 
 # Pour repartir le cluster:
 # Valider si c'est en train de rouler
@@ -36,7 +39,10 @@ done
 mysqlpod="$(kubectl -n siad-mahara-dev-01 get pods -l app=mysql -o custom-columns=:metadata.name | grep mysql)"
 
 # C'est sûrement trop.... à révoir
-sleep 10s
+# Erreur
+#Error from server (BadRequest): pod mysql-cc68c9945-wbqrt does not have a host assigned
+echo 'Waiting for mysql pod'
+sleep 1m
 
 # copier le fichier pour la BD
 echo 'Copier DB file'
@@ -64,6 +70,7 @@ do
   kubectl create -f $resource
 done
 
+echo 'Waiting for mahara pod'
 sleep 30s
 mahpod="$(kubectl -n siad-mahara-dev-01 get pods -l app=mah01-dev -o custom-columns=:metadata.name | grep mah)"
 
@@ -71,8 +78,22 @@ mahpod="$(kubectl -n siad-mahara-dev-01 get pods -l app=mah01-dev -o custom-colu
 kubectl -n siad-mahara-dev-01 \
 exec -it ${mahpod} -- sh -c  "chown -R www-data:www-data /var/www/maharadata"
 
+# Connexion au dash k8s
+## Obtenir token:
+# kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep admin-user | awk '{print $1}')
+# Faire proxy:
+# kubectl proxy
+# Se connecter avec token:
+# http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/
+
+
 # pour partir le tunnel
 # forwarder le trafic ver le 30005 avant
 # port-forward est bloquant
 # kubectl -n siad-mahara-dev-01 port-forward service/web-service-mahara01 30005:443 & \
 # ngrok http -subdomain=uqam 30005
+
+##############################################
+# Réstarter le port-forward quand on bouge le container mahara.
+# sinon erreur Bad Request
+#############################################
