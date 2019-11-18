@@ -23,6 +23,9 @@ else
     sleep 5s
 fi
 
+# Pour que kubectl parle au cluster kind
+export KUBECONFIG="$(kind get kubeconfig-path --name="k8s-test")"
+
 # Tant qu'à faire on pourrait aussi ajouter la création du ns ici
 # Ce sera au besoin:
 kubectl delete ns siad-mahara-dev-01
@@ -95,5 +98,5 @@ exec -it ${mahpod} -- sh -c  "chown -R www-data:www-data /var/www/maharadata"
 
 ##############################################
 # Réstarter le port-forward quand on bouge le container mahara.
-# sinon erreur Bad Request
+# sinon erreur Bad Requestexport
 #############################################
