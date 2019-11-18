@@ -47,6 +47,12 @@ session_start()\n
 referer: https://uqam.ngrok.io/?login&override=true
 ```
 
+Les paramètres de configuration ont changé; ajouter dans `config.php`:
+``
+$cfg->memcacheservers = getenv('MAH_MCROUTER');
+$cfg->sessionhandler = 'memcached';`
+```
+
 ### N'est plus nécessaire
 Pour que ça fonctionne la passe:
 ```
@@ -206,6 +212,11 @@ pvc-siad-mahara-dev-01-vol01   Bound    pvc-b6d1e230-ef4a-11e9-8350-0242ac110002
 Script `create-mahara-inf`: on y mettra tout le processus pour que ce soit facile à reproduire.
 
 ### Set-up de la BD
+
+Pour utiliser phpmyadmin
+```
+kubectl -n siad-mahara-dev-01 port-forward pod/phpmyadmin 8888:80
+```
 La taille n'étant pas grosse, nous pouvons aller avec un dump par l'interface phpmyadmin.
 
 Une fois que nous avons le fichier
@@ -407,8 +418,40 @@ docker run -it --rm -v $(pwd):/opt/mahara -w /opt/mahara \
 -u 1000:1000 nmolleruq/phpcomposer:7.2 make cleanssphp
 ```
 
+## Outils pour thème.
+
+Préparer un thème basé sur modern avec des coleurs plus uqam; utiliser un outil comme:
+
+https://material.io/resources/color/#!/?view.left=0&view.right=0&primary.color=2962FF
+
+## Image
+
+https://talk.plesk.com/threads/install-memcache-php7-error.340289/
+
+https://stackoverflow.com/questions/41605999/how-can-i-find-php-smart-string-h-instead-of-php-smart-str-h
 # Ce qui reste à faire
 
 - Nouvelle image mahara
 - Configuration ssphp 
 
+## Mcrouter
+
+```
+jphalip/mcrouter:0.36.0
+```
+
+Partir un container ubuntu:18.04, suivre les instructions du `Readme` du release de mcrouter
+
+Même sans avoir netoyé;
+Bâtir une image plus lègère:
+```
+docker ps -l -q
+8577ce715a2a
+nmoller@nm-UQAM-HP:~$ docker ps
+CONTAINER ID        IMAGE                  COMMAND                  CREATED             STATUS              PORTS                                  NAMES
+8577ce715a2a        ubuntu:18.04           "bash"                   6 minutes ago       Up 6 minutes                                               boring_shtern
+nmoller@nm-UQAM-HP:~$ docker commit -m "mcrouter installed" -a "Nelson Moller" 8577ce715a2a nmolleruq/mcrouter:0.41.0
+sha256:c599ab98c7c3f8eccb204d972d970d2780d2db45eb2e785ef891bf012a77c10a
+nmoller@nm-UQAM-HP:~$ docker images |grep mcrouter
+nmolleruq/mcrouter                                    0.41.0              c599ab98c7c3        12 seconds ago      165MB
+```
