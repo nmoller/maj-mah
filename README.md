@@ -1,3 +1,18 @@
+# Setup
+une fois que le setup est fait:
+
+```
+kubectl -n siad-mahara-dev-01  port-forward service/web-service-mahara01 8080:443
+
+ngrok http -hostname=uqam.ngrok.io 8080
+
+```
+
+Se connecter:
+```
+https://uqam.ngrok.io/?login&admin_login
+```
+
 # Mise à jour Mahara
 
 | Composante | Lien |
