@@ -21,15 +21,15 @@ spec:
   selector:
     app: mah01-dev
   ports:
-#    - port: 443
-#      protocol: TCP
-#      targetPort: 443
-#      nodePort: 30005
-#      name: http
+    - port: 443
+      protocol: TCP
+      targetPort: 443
+      nodePort: 30005
+      name: https
     - port: 80
       protocol: TCP
       targetPort: 80
-      nodePort: 30005
+      nodePort: 30006
       name: http
   type: NodePort  
 ---
