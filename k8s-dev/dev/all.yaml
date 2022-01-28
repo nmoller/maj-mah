@@ -21,9 +21,14 @@ spec:
   selector:
     app: mah01-dev
   ports:
-    - port: 443
+#    - port: 443
+#      protocol: TCP
+#      targetPort: 443
+#      nodePort: 30005
+#      name: http
+    - port: 80
       protocol: TCP
-      targetPort: 443
+      targetPort: 80
       nodePort: 30005
       name: http
   type: NodePort  
@@ -43,7 +48,10 @@ spec:
     spec:
       
       containers:
-      - image: nmolleruq/mah:v0.6.3
+      #- image: nmolleruq/mah:v0.6.3
+      #- image: nmolleruq/mah:v17_04-01
+      #- image: nmolleruq/mah:v19.10-21
+      - image:  nmolleruq/mah:v21.10.2
         imagePullPolicy: IfNotPresent
         name: mahara-web01
         resources:

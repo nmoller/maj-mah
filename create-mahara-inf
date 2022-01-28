@@ -39,13 +39,13 @@ do
   kubectl create -f $resource
 done
 
-mysqlpod="$(kubectl -n siad-mahara-dev-01 get pods -l app=mysql -o custom-columns=:metadata.name | grep mysql)"
-
 # C'est sûrement trop.... à révoir
 # Erreur
 #Error from server (BadRequest): pod mysql-cc68c9945-wbqrt does not have a host assigned
 echo 'Waiting for mysql pod'
-sleep 1m
+sleep 2m
+
+mysqlpod="$(kubectl -n siad-mahara-dev-01 get pods -l app=mysql -o custom-columns=:metadata.name | grep mysql)"
 
 # copier le fichier pour la BD
 echo 'Copier DB file'
@@ -81,6 +81,8 @@ mahpod="$(kubectl -n siad-mahara-dev-01 get pods -l app=mah01-dev -o custom-colu
 kubectl -n siad-mahara-dev-01 \
 exec -it ${mahpod} -- sh -c  "chown -R www-data:www-data /var/www/maharadata"
 
+# Connexion au cluster
+# export KUBECONFIG="$(kind get kubeconfig-path --name="k8s-test")"
 # Connexion au dash k8s
 ## Obtenir token:
 # kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep admin-user | awk '{print $1}')

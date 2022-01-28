@@ -1,6 +1,7 @@
 ---
 # Source: mahk8s/templates/cron.yml
-apiVersion: batch/v2alpha1
+#apiVersion: batch/v2alpha1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: mahara-cron01
