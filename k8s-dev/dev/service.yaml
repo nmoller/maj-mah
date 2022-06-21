@@ -1,0 +1,22 @@
+---
+# Source: mahk8s/templates/service.yml
+kind: Service
+apiVersion: v1
+metadata:
+  name: web-service-mahara01
+  namespace: siad-mahara-dev-01
+spec:
+  selector:
+    app: mah01-dev
+  ports:
+    - port: 443
+      protocol: TCP
+      targetPort: 443
+      nodePort: 30005
+      name: https
+    - port: 80
+      protocol: TCP
+      targetPort: 80
+      nodePort: 30006
+      name: http
+  type: NodePort  

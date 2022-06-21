@@ -1,0 +1,46 @@
+apiVersion: v1
+data:
+  config.php: |-
+    <?php
+    $cfg = new stdClass();
+    $cfg->dbtype   = 'mysql';
+    $cfg->dbhost   = getenv('MAH_DBHOST');
+    $cfg->dbport   = null; // Change if you are using a non-standard port number for your database
+    $cfg->dbname   = getenv('MAH_DBNAME');
+    $cfg->dbuser   = getenv('MAH_DBUSER');
+    $cfg->dbpass   = getenv('MAH_DBPASS');
+
+    $cfg->dataroot = getenv('MAH_DATAROOT');
+    $cfg->wwwroot = getenv('MAH_WWWROOT');
+    $cfg->urlsecret = null;
+    $cfg->passwordsaltmain = getenv('MAH_PWDSALT');
+    
+    $cfg->productionmode = false;
+    date_default_timezone_set('America/Toronto');
+
+    $cfg->memcacheservers = getenv('MAH_MCROUTER');
+    $cfg->sslproxy = true;
+
+    $cfg->saml_custommappingfile = '{
+        "sp" : ["/var/www/html/auth/saml/extlib/simplesamlphp/attributemap/oid2name.php"]
+    }';
+    $cfg->sessionhandler = 'memcached'; // also set the $cfg->memcacheservers setting if using this one
+    $cfg->ssphpsessionhandler = 'memcached'; // also set the $cfg->memcacheservers setting if using this one
+    
+    $cfg->usersuniquebyusername = false;
+
+    // Test pour performance
+    $CFG->dbpersist = false; // connection mysql no persistante
+    $cfg->sendemail = true;
+
+    $cfg->theme = 'uqam';
+    $cfg->skins = true;
+    $cfg->showloginsideblock = false;
+    $cfg->session_timeout = 10800; //3 heures
+    //$cfg->externallogin = 'https://mahara.uqam.ca/auth/saml/index.php?hostwwwroot={wwwroot}&wantsurl={shorturlencoded}';
+    $cfg->externallogin = getenv('MAH_LOGIN');
+    // closing php tag intentionally omitted to prevent whitespace issues
+kind: ConfigMap
+metadata:
+  name: configphp
+  namespace: siad-mahara-dev-01

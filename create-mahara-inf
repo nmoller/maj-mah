@@ -50,7 +50,7 @@ mysqlpod="$(kubectl -n siad-mahara-dev-01 get pods -l app=mysql -o custom-column
 # copier le fichier pour la BD
 echo 'Copier DB file'
 kubectl -n siad-mahara-dev-01 cp \
-DB/mahara_dev.sql \
+DB/202202141020.sql \
 siad-mahara-dev-01/${mysqlpod}:/mahara_dev.sql
 
 # copier le ficher pour le setup BD dans le pod
@@ -97,6 +97,7 @@ exec -it ${mahpod} -- sh -c  "chown -R www-data:www-data /var/www/maharadata"
 # port-forward est bloquant
 # kubectl -n siad-mahara-dev-01 port-forward service/web-service-mahara01 30005:443 & \
 # ngrok http -subdomain=uqam 30005
+# kubectl -n siad-mahara-dev-01 port-forward pod/phpmyadmin 8080:80
 
 ##############################################
 # Réstarter le port-forward quand on bouge le container mahara.

@@ -1,7 +1,8 @@
 ---
 # Source: mahk8s/templates/cron.yml
+apiVersion: batch/v1beta1
 #apiVersion: batch/v2alpha1
-apiVersion: batch/v1
+#apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: mahara-cron01
@@ -12,21 +13,24 @@ spec:
   schedule: "*/5 * * * *"
   jobTemplate:
     spec:
-      #backoffLimit: 0
+      backoffLimit: 0
       template:
         spec:
           volumes:
           - name: mahara01-storage
             persistentVolumeClaim:
-             claimName: pvc-siad-mahara-dev-01-vol01
+              claimName: pvc-siad-mahara-dev-01-vol01
+          - name: configphp
+            configMap:
+              name: configphp
           containers:
-          - image: nmolleruq/mah:v0.6.3
+          - image: nmolleruq/mah:v22.10.1
             imagePullPolicy: IfNotPresent
             name: mah-cron
             resources:
               limits:
-                cpu: 50m
-                memory: 50Mi
+                cpu: 150m
+                memory: 100Mi
               requests:
                 cpu: 10m
                 memory: 10Mi
@@ -80,9 +84,15 @@ spec:
             volumeMounts:
             - mountPath: /var/www/maharadata
               name: mahara01-storage
+            - mountPath: /var/www/html/config.php
+              name: configphp
+              subPath: config.php
           
             args:
             - /bin/sh
             - -c
-            - su -p -s /bin/bash -l www-data -c "php /var/www/html/lib/cron.php"
+            #- su -p -s /bin/bash -l www-data -c "php /var/www/html/lib/cron.php"
+            - "apt-get update && apt-get install sudo && sudo -E -u www-data php /var/www/html/lib/cron.php"
           restartPolicy: Never
+          imagePullSecrets:
+            - name: dockerhubprive

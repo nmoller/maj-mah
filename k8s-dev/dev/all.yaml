@@ -6,32 +6,12 @@ metadata:
   namespace: siad-mahara-dev-01
 data:
   dataroot: /var/www/maharadata
-  wwwroot: https://uqam.ngrok.io
+  wwwroot: https://mahara.dev.uqam.ca
   memsession: mah-memcached-0.mah-memcached.siad-mahara-dev-01:11211,mah-memcached-1.mah-memcached.siad-mahara-dev-01:11211
   mcrouter: mah-mcrouter.siad-mahara-dev-01:5000
   passwsalt: 'SalutLaPassem01lap0kp0xp0k19'
----
-# Source: mahk8s/templates/service.yml
-kind: Service
-apiVersion: v1
-metadata:
-  name: web-service-mahara01
-  namespace: siad-mahara-dev-01
-spec:
-  selector:
-    app: mah01-dev
-  ports:
-    - port: 443
-      protocol: TCP
-      targetPort: 443
-      nodePort: 30005
-      name: https
-    - port: 80
-      protocol: TCP
-      targetPort: 80
-      nodePort: 30006
-      name: http
-  type: NodePort  
+  login: https://mahara.dev.uqam.ca/auth/saml/index.php?hostwwwroot={wwwroot}&wantsurl={shorturlencoded}
+
 ---
 # Source: mahk8s/templates/deployment.yml
 apiVersion: extensions/v1beta1
@@ -48,16 +28,17 @@ spec:
     spec:
       
       containers:
-      #- image: nmolleruq/mah:v0.6.3
+      #- image: nmolleruq/mah:v1.0.0
       #- image: nmolleruq/mah:v17_04-01
       #- image: nmolleruq/mah:v19.10-21
-      - image:  nmolleruq/mah:v21.10.2
+      #- image:  nmolleruq/mah:v21.10.9
+      - image:  nmolleruq/mah:v22.10.1
         imagePullPolicy: IfNotPresent
         name: mahara-web01
         resources:
             limits:
-              cpu: 2100m
-              memory: 3Gi
+              cpu: 1000m
+              memory: 1Gi
             requests:
               cpu: 10m
               memory: 50Mi
@@ -74,6 +55,11 @@ spec:
             configMapKeyRef:
               name: mahara01-config
               key: dataroot
+        - name: MAH_LOGIN
+            valueFrom:
+              configMapKeyRef:
+                name: mahara01-config
+                key: login
         - name: MAH_MCROUTER
           valueFrom:
             configMapKeyRef:
@@ -127,7 +113,13 @@ spec:
         volumeMounts:
         - mountPath: /var/www/maharadata
           name: mahara01-storage
+        - mountPath: /var/www/html/config.php
+          name: configphp
+          subPath: config.php
       volumes:
       - name: mahara01-storage
         persistentVolumeClaim:
          claimName: pvc-siad-mahara-dev-01-vol01
+      - name: configphp
+        configMap:
+          name: configphp
